@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from .models import UTNSubject
 
 
 class Subject(ABC):
@@ -83,6 +84,10 @@ class ApprovalSubject(Subject):
             raise ValueError('Child must be ApprovalSubject')
 
 
+class RegularSubject(Subject):
+    pass
+
+
 class SubjectTree(ABC):
     """
     A Tree that containt Subject objects as nodes.
@@ -97,6 +102,13 @@ class SubjectTree(ABC):
         self.root = root
 
     def str_constructor(self, actual_subject, tree_str='', indent_level=0) -> str:
+        """
+        Builds the tree diagram
+
+        Returns:
+            str: Tree diagram with identation
+        """
+
         tree_str = '|———' * indent_level + actual_subject.name
         for child in actual_subject.children:
             tree_str += '\n' + \
@@ -112,7 +124,7 @@ class SubjectTree(ABC):
     def search(self, sql_id: int, actual_subject: Subject):
         """
         Given a certain sql_id and actual_subject, it looks for the actual_subject children whose sql_id
-        matches with the one passed as an argument 
+        matches with the one passed as an argument
 
         Args:
             sql_id (int): Subject's sql id
@@ -130,9 +142,13 @@ class SubjectTree(ABC):
 
         Args:
             father_sql_id (int): Father's sql id
-            child_subject (Subject): Child to add            
+            child_subject (Subject): Child to add
         """
         pass
+
+
+class RegularTree(SubjectTree):
+    pass
 
 
 class ApprovalTree(SubjectTree):
@@ -141,10 +157,8 @@ class ApprovalTree(SubjectTree):
     the approval path that any student follows to finish the career
     """
 
-    def __init__(self) -> None:
-        ingreso = ApprovalSubject(is_approved=False,
-                                  sql_id=1, name='Ingreso', is_enrollable=True)
-        super().__init__(root=ingreso)
+    def __init__(self, root) -> None:
+        super().__init__(root=root)
 
     def __str__(self) -> str:
 
@@ -167,11 +181,89 @@ class ApprovalTree(SubjectTree):
         else:
             raise Exception("Couldn't add the subject, father doesn't exist")
 
+
+class SubjectTreeDB():
+    """
+    Creates a Tree, containing subjects as nodes, it can be either ApprovalTree or RegularTree
+
+    Args:
+        career (str): must be: sistemas, mecanica, metalurgica, electronica, electrica, industrial or quimica
+        type (str): must be: 'approval' or 'regular'
+    """
+
+    def __init__(self, career: str, tree_type: str) -> None:
+        self.tree = self.create(tree_type=tree_type, career=career)
+        self.career = career
+
+    def parseStrList(self, str_list: str) -> list:
+        """
+        Parse from str('int,int') to list(int,int)
+        example: '1,2,3,4' -> [1,2,3,4]
+
+        Args:
+            str_list (str): A str with the following format -> '1,2,3,4'
+
+        Returns:
+            list: A list containing int elements separeted by commas
+        """
+
+        final_list = []
+        number = ''
+        for char in str_list:
+
+            if char == ',':
+                final_list.append(int(number))
+                number = ''
+                continue
+
+            elif char.isdigit():
+                number += char
+
+        final_list.append(int(number))
+        return final_list
+
+    def create(self, tree_type: str, career: str) -> SubjectTree:
+        """
+        Builds the tree structure using the database data
+
+        Args:
+            career (str): must be: sistemas, mecanica, metalurgica, electronica, electrica, industrial or quimica
+            type (str): must be: 'approval' or 'regular'
+
+        Returns:
+            SubjectTree: when the transaction was successfull and the tree was created correctly
+        """
+
+        if tree_type == 'approval':
+            ingreso = UTNSubject.objects.get(approval_fathers=career)
+            ingreso_subject = ApprovalSubject(
+                is_approved=False, sql_id=ingreso.id, name=ingreso.name, is_enrollable=True)
+
+            tree = ApprovalTree(root=ingreso_subject)
+            ingreso_children_ids = self.parseStrList(ingreso.approval_children)
+
+            # abstraer a una funcion recursiva que construya todo el arbol, no solo primer año
+            for sql_id in ingreso_children_ids:
+                subject = UTNSubject.objects.get(id=sql_id)
+                approval_subject = ApprovalSubject(
+                    is_approved=False, sql_id=subject.id, name=subject.name, is_enrollable=False)
+                tree.addSubject(
+                    father_sql_id=ingreso_subject.sql_id, child_subject=approval_subject)
+
+        elif tree_type == 'regular':
+            pass
+
+        return tree
+
+
 # TEST AREA------------------------------------------------------------------------------------------------------------------------
 
 
 if __name__ == '__main__':
-    ami = ApprovalSubject(is_approved=False, sql_id=2,
+    pass
+
+"""
+ami = ApprovalSubject(is_approved=False, sql_id=2,
                           name='Analisis matematico 1', is_enrollable=True)
 
     an = ApprovalSubject(is_approved=False, sql_id=3,
@@ -192,7 +284,8 @@ if __name__ == '__main__':
     ia = ApprovalSubject(is_approved=False, sql_id=8,
                          name='Inteligencia artificial', is_enrollable=False)
 
-    t = ApprovalTree()
+    t = ApprovalTree(root=ApprovalSubject(is_approved=False,
+                     sql_id=1, name='Ingreso', is_enrollable=False))
 
     t.addSubject(father_sql_id=1, child_subject=ami)
     t.addSubject(father_sql_id=1, child_subject=fis1)
@@ -206,5 +299,5 @@ if __name__ == '__main__':
     t.addSubject(father_sql_id=7, child_subject=ia)
 
     t.addSubject(father_sql_id=2, child_subject=fis3)
-
-    print(t)
+print(t)
+"""
