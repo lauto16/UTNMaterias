@@ -27,6 +27,7 @@ class Subject(ABC):
         self.sql_id = sql_id
         self.name = name
         self.is_enrollable = is_enrollable
+        self.fathers = []
         self.children = []
 
     @abstractmethod
@@ -40,7 +41,7 @@ class Subject(ABC):
 
 class ApprovalSubject(Subject):
     """
-    Represents a subject that needs to be fully approved so that the user 
+    Represents a subject that needs to be fully approved so that the user
     can register as a student of the subject's children.
 
     Args:
@@ -53,8 +54,11 @@ class ApprovalSubject(Subject):
 
     def __str__(self) -> str:
         str_children = [child.name for child in self.children]
+        str_fathers = [father.name for father in self.fathers]
+
         r = str(
             f'ID: {self.sql_id}\n' +
+            f'FATHERS: {str_fathers}\n' +
             f'NAME: {self.name}\n' +
             f'CHILDREN: {str_children}\n' +
             f'IS_APPROVED: {self.is_approved}\n' +
@@ -73,6 +77,7 @@ class ApprovalSubject(Subject):
         if isinstance(subject, ApprovalSubject):
             # verificar que no exista ya en el arbol
             #
+            subject.fathers.append(self)
             self.children.append(subject)
         else:
             raise ValueError('Child must be ApprovalSubject')
@@ -90,6 +95,18 @@ class SubjectTree(ABC):
     def __init__(self, root: Subject) -> None:
         super().__init__()
         self.root = root
+
+    def str_constructor(self, actual_subject, tree_str='', indent_level=0) -> str:
+        tree_str = '|———' * indent_level + actual_subject.name
+        for child in actual_subject.children:
+            tree_str += '\n' + \
+                self.str_constructor(
+                    actual_subject=child, tree_str=tree_str, indent_level=indent_level+1)
+
+        return tree_str
+
+    def __str__(self) -> str:
+        return self.str_constructor(actual_subject=self.root)
 
     @abstractmethod
     def search(self, sql_id: int, actual_subject: Subject):
@@ -129,6 +146,10 @@ class ApprovalTree(SubjectTree):
                                   sql_id=1, name='Ingreso', is_enrollable=True)
         super().__init__(root=ingreso)
 
+    def __str__(self) -> str:
+
+        return super().__str__()
+
     def search(self, sql_id: int, actual_subject: ApprovalSubject):
         if actual_subject.sql_id == sql_id:
             return actual_subject
@@ -146,38 +167,44 @@ class ApprovalTree(SubjectTree):
         else:
             raise Exception("Couldn't add the subject, father doesn't exist")
 
-
 # TEST AREA------------------------------------------------------------------------------------------------------------------------
-ami = ApprovalSubject(is_approved=False, sql_id=2,
-                      name='Analisis matematico 1', is_enrollable=True)
-
-an = ApprovalSubject(is_approved=False, sql_id=3,
-                     name='Analisis numerico', is_enrollable=False)
-
-eco = ApprovalSubject(is_approved=False, sql_id=4,
-                      name='Economia', is_enrollable=False)
 
 
-fis1 = ApprovalSubject(is_approved=False, sql_id=5,
-                       name='Fisica 1', is_enrollable=False)
+if __name__ == '__main__':
+    ami = ApprovalSubject(is_approved=False, sql_id=2,
+                          name='Analisis matematico 1', is_enrollable=True)
 
-fis3 = ApprovalSubject(is_approved=False, sql_id=6,
-                       name='Fisica 3', is_enrollable=False)
+    an = ApprovalSubject(is_approved=False, sql_id=3,
+                         name='Analisis numerico', is_enrollable=False)
 
-com = ApprovalSubject(is_approved=False, sql_id=7,
-                      name='Comunicacion de datos', is_enrollable=False)
+    eco = ApprovalSubject(is_approved=False, sql_id=4,
+                          name='Economia', is_enrollable=False)
 
+    fis1 = ApprovalSubject(is_approved=False, sql_id=5,
+                           name='Fisica 1', is_enrollable=False)
 
-t = ApprovalTree()
+    fis3 = ApprovalSubject(is_approved=False, sql_id=6,
+                           name='Fisica 3', is_enrollable=False)
 
-t.addSubject(father_sql_id=1, child_subject=ami)
-t.addSubject(father_sql_id=1, child_subject=fis1)
+    com = ApprovalSubject(is_approved=False, sql_id=7,
+                          name='Comunicacion de datos', is_enrollable=False)
 
-t.addSubject(father_sql_id=2, child_subject=an)
-t.addSubject(father_sql_id=2, child_subject=eco)
+    ia = ApprovalSubject(is_approved=False, sql_id=8,
+                         name='Inteligencia artificial', is_enrollable=False)
 
-t.addSubject(father_sql_id=5, child_subject=fis3)
-t.addSubject(father_sql_id=5, child_subject=com)
+    t = ApprovalTree()
 
+    t.addSubject(father_sql_id=1, child_subject=ami)
+    t.addSubject(father_sql_id=1, child_subject=fis1)
 
-print(t.search(0, t.root))
+    t.addSubject(father_sql_id=2, child_subject=an)
+    t.addSubject(father_sql_id=2, child_subject=eco)
+
+    t.addSubject(father_sql_id=5, child_subject=fis3)
+    t.addSubject(father_sql_id=5, child_subject=com)
+
+    t.addSubject(father_sql_id=7, child_subject=ia)
+
+    t.addSubject(father_sql_id=2, child_subject=fis3)
+
+    print(t)
