@@ -206,6 +206,8 @@ class SubjectTreeDB():
         Returns:
             list: A list containing int elements separeted by commas
         """
+        if str_list == '':
+            return []
 
         final_list = []
         number = ''
@@ -242,19 +244,28 @@ class SubjectTreeDB():
             tree = ApprovalTree(root=ingreso_subject)
             ingreso_children_ids = self.parseStrList(ingreso.approval_children)
 
-            # abstraer a una funcion recursiva que construya todo el arbol, no solo primer año
-            for sql_id in ingreso_children_ids:
-                subject = UTNSubject.objects.get(id=sql_id)
-                approval_subject = ApprovalSubject(
-                    is_approved=False, sql_id=subject.id, name=subject.name, is_enrollable=False)
-                tree.addSubject(
-                    father_sql_id=ingreso_subject.sql_id, child_subject=approval_subject)
+            tree = self.recursive_tree_build(
+                sql_ids=ingreso_children_ids, tree=tree, actual_subject=tree.root)
 
         elif tree_type == 'regular':
             pass
 
         return tree
 
+    def recursive_tree_build(self, tree: SubjectTree, sql_ids: list, actual_subject: Subject) -> SubjectTree:
+        for sql_id in sql_ids:
+            subject = UTNSubject.objects.get(id=sql_id)
+
+            approval_subject = ApprovalSubject(
+                is_approved=False, sql_id=subject.id, name=subject.name, is_enrollable=False)
+            tree.addSubject(
+                father_sql_id=actual_subject.sql_id, child_subject=approval_subject)
+
+            new_ids = self.parseStrList(subject.approval_children)
+            self.recursive_tree_build(
+                tree=tree, sql_ids=new_ids, actual_subject=approval_subject)
+
+        return tree
 
 # TEST AREA------------------------------------------------------------------------------------------------------------------------
 
