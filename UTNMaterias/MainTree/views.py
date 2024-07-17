@@ -12,7 +12,6 @@ def index(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         action = data['action']
-
         # CUANDO SE QUIERA CONSULTAR SOLO LOS DATOS DE UN SUBJECT, RECURRIMOS A LA API REST QUE VAMOS A CREAR
         # CUANDO SE QUIERA CREAR TOD0 EL ARBOL Y PASARLO AL FRONT HACERLO DESDE LA VISTA EN BACKEND
 

@@ -61,21 +61,7 @@ class ApprovalSubject(Subject):
         self.is_approved = is_approved
 
     def __str__(self) -> str:
-
-        list_str_children = [(f'{child.name} ({child.sql_id})')
-                             for child in self.children]
-        list_str_fathers = [(f'{father.name} ({father.sql_id})')
-                            for father in self.fathers]
-
-        r = str(
-            f'ID: {self.sql_id}\n' +
-            f'FATHERS: {list_str_fathers}\n' +
-            f'NAME: {self.name}\n' +
-            f'CHILDREN: {list_str_children}\n' +
-            f'IS_APPROVED: {self.is_approved}\n' +
-            f'IS_ENROLLABLE: {self.is_enrollable}\n'
-        )
-        return r
+        return str(self.as_dict())
 
     def addChild(self, subject) -> None:
         """
