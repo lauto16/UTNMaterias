@@ -59,17 +59,19 @@ class ApprovalSubject(Subject):
     def __init__(self, is_approved: bool, sql_id: int, name: str, is_enrollable: bool) -> None:
         super().__init__(sql_id=sql_id, name=name, is_enrollable=is_enrollable)
         self.is_approved = is_approved
-        self.list_str_children = [{'name': child.name, 'id': child.sql_id}
-                                  for child in self.children]
-        self.list_str_fathers = [{'name': father.name, 'id': father.sql_id}
-                                 for father in self.fathers]
 
     def __str__(self) -> str:
+
+        list_str_children = [(f'{child.name} ({child.sql_id})')
+                             for child in self.children]
+        list_str_fathers = [(f'{father.name} ({father.sql_id})')
+                            for father in self.fathers]
+
         r = str(
             f'ID: {self.sql_id}\n' +
-            f'FATHERS: {self.list_str_fathers}\n' +
+            f'FATHERS: {list_str_fathers}\n' +
             f'NAME: {self.name}\n' +
-            f'CHILDREN: {self.list_str_children}\n' +
+            f'CHILDREN: {list_str_children}\n' +
             f'IS_APPROVED: {self.is_approved}\n' +
             f'IS_ENROLLABLE: {self.is_enrollable}\n'
         )
@@ -84,18 +86,28 @@ class ApprovalSubject(Subject):
         """
 
         if isinstance(subject, ApprovalSubject):
-            if subject not in self.children:
-                subject.fathers.append(self)
-                self.children.append(subject)
+            for child in self.children:
+                if subject.sql_id == child.sql_id:
+                    return
+            for father in subject.fathers:
+                if self.sql_id == father.sql_id:
+                    return
+
+            subject.fathers.append(self)
+            self.children.append(subject)
         else:
             raise ValueError('Child must be ApprovalSubject')
 
     def as_dict(self) -> dict:
+        list_str_children = [({'name': child.name, 'id': child.sql_id})
+                             for child in self.children]
+        list_str_fathers = [({'name': father.name, 'id': father.sql_id})
+                            for father in self.fathers]
         data = {
             'name': self.name,
             'id': self.sql_id,
-            'fathers': self.list_str_fathers,
-            'children': self.list_str_children,
+            'fathers': list_str_fathers,
+            'children': list_str_children,
             'approved': self.is_approved,
             'enrollable': self.is_enrollable
         }
@@ -128,7 +140,8 @@ class SubjectTree(ABC):
             str: Tree diagram with identation
         """
 
-        tree_str = '|———' * indent_level + actual_subject.name
+        tree_str = '|———' * indent_level + \
+            actual_subject.name + f'({actual_subject.sql_id})'
         for child in actual_subject.children:
             tree_str += '\n' + \
                 self.str_constructor(
@@ -265,28 +278,41 @@ class SubjectTreeDB():
             ingreso_children_ids = self.parseStrList(ingreso.approval_children)
 
             tree = self.recursive_tree_build(
-                sql_ids=ingreso_children_ids, tree=tree, actual_subject=tree.root)
+                sql_ids=ingreso_children_ids, tree=tree, actual_subject=tree.root, added_nodes=[tree.root.sql_id])
 
         elif tree_type == 'regular':
             pass
 
         return tree
 
-    def recursive_tree_build(self, tree: SubjectTree, sql_ids: list, actual_subject: Subject) -> SubjectTree:
+    def recursive_tree_build(self, tree: SubjectTree, sql_ids: list, actual_subject: Subject, added_nodes: list) -> SubjectTree:
+        """
+        Generates a tree using recursion an database info.
+
+        Args:
+            tree (SubjectTree): Base tree
+            sql_ids (list): Ingreso subject children sql_id's list
+            added_nodes (list): The nodes that already exist at the tree
+            actual_subject (Subject): The current subject
+        """
         for sql_id in sql_ids:
-            subject = UTNSubject.objects.get(id=sql_id)
+            # ami, aga, etc...
+            child_subject = UTNSubject.objects.get(id=sql_id)
+            child = ApprovalSubject(
+                is_approved=False, is_enrollable=False, name=child_subject.name, sql_id=child_subject.id)
 
-            subject_children = self.parseStrList(subject.approval_children)
+            if child.sql_id in added_nodes:
+                found_subject = tree.search(
+                    sql_id=child.sql_id, actual_subject=tree.root)
+                if found_subject:
+                    actual_subject.addChild(found_subject)
 
-            approval_subject = ApprovalSubject(
-                is_approved=False, sql_id=subject.id, name=subject.name, is_enrollable=False)
+            else:
+                actual_subject.addChild(child)
+                added_nodes.append(child.sql_id)
 
-            tree.addSubject(
-                father_sql_id=actual_subject.sql_id, child_subject=approval_subject)
-
-            new_ids = self.parseStrList(subject.approval_children)
-            self.recursive_tree_build(
-                tree=tree, sql_ids=new_ids, actual_subject=approval_subject)
+            self.recursive_tree_build(tree=tree, sql_ids=self.parseStrList(
+                child_subject.approval_children), actual_subject=child, added_nodes=added_nodes)
 
         return tree
 
@@ -295,43 +321,3 @@ class SubjectTreeDB():
 
 if __name__ == '__main__':
     pass
-
-"""
-ami = ApprovalSubject(is_approved=False, sql_id=2,
-                          name='Analisis matematico 1', is_enrollable=True)
-
-    an = ApprovalSubject(is_approved=False, sql_id=3,
-                         name='Analisis numerico', is_enrollable=False)
-
-    eco = ApprovalSubject(is_approved=False, sql_id=4,
-                          name='Economia', is_enrollable=False)
-
-    fis1 = ApprovalSubject(is_approved=False, sql_id=5,
-                           name='Fisica 1', is_enrollable=False)
-
-    fis3 = ApprovalSubject(is_approved=False, sql_id=6,
-                           name='Fisica 3', is_enrollable=False)
-
-    com = ApprovalSubject(is_approved=False, sql_id=7,
-                          name='Comunicacion de datos', is_enrollable=False)
-
-    ia = ApprovalSubject(is_approved=False, sql_id=8,
-                         name='Inteligencia artificial', is_enrollable=False)
-
-    t = ApprovalTree(root=ApprovalSubject(is_approved=False,
-                     sql_id=1, name='Ingreso', is_enrollable=False))
-
-    t.addSubject(father_sql_id=1, child_subject=ami)
-    t.addSubject(father_sql_id=1, child_subject=fis1)
-
-    t.addSubject(father_sql_id=2, child_subject=an)
-    t.addSubject(father_sql_id=2, child_subject=eco)
-
-    t.addSubject(father_sql_id=5, child_subject=fis3)
-    t.addSubject(father_sql_id=5, child_subject=com)
-
-    t.addSubject(father_sql_id=7, child_subject=ia)
-
-    t.addSubject(father_sql_id=2, child_subject=fis3)
-print(t)
-"""

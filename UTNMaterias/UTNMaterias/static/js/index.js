@@ -16,6 +16,7 @@ function getCookie(name) {
 }
 
 
+/* REEMPLAZAR CON CONSULTA CON API
 function getSubject(subject_id) {
 
     let requestOptions = {
@@ -55,5 +56,4 @@ function getSubject(subject_id) {
         });
 
 }
-
-getSubject(subject_id=24)
+*/

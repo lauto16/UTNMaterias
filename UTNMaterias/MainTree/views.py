@@ -13,24 +13,9 @@ def index(request):
         data = json.loads(request.body)
         action = data['action']
 
-        if action == 'getSubject':
-            subject_sql_id = int(data['subject_id'])
+        # CUANDO SE QUIERA CONSULTAR SOLO LOS DATOS DE UN SUBJECT, RECURRIMOS A LA API REST QUE VAMOS A CREAR
+        # CUANDO SE QUIERA CREAR TOD0 EL ARBOL Y PASARLO AL FRONT HACERLO DESDE LA VISTA EN BACKEND
 
-            try:
-                # subject_data = db_tree.tree.search(
-                # sql_id=subject_sql_id, actual_subject=db_tree.tree.root).as_dict()
-
-                print(db_tree.tree.root)
-
-                return JsonResponse({'success': True, 'subject': 'subject_data'})
-
-            except Exception as e:
-                print(e)
-                return JsonResponse(
-                    {
-                        'success': False
-                    }
-                )
     return render(request, 'index.html')
 
     """
