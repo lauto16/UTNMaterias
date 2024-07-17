@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from .models import UTNSubject
+import json
 
 
 class Subject(ABC):
@@ -39,6 +40,10 @@ class Subject(ABC):
     def addChild(self, child) -> None:
         pass
 
+    @abstractmethod
+    def as_dict(self) -> dict:
+        pass
+
 
 class ApprovalSubject(Subject):
     """
@@ -47,21 +52,24 @@ class ApprovalSubject(Subject):
 
     Args:
         self.is_approved: bool -> True if the user completely finished the subject
+        self.list_str_children: list -> Contains name and sql_id of all subject's children
+        self.list_str_fathers: list -> Contains name and sql_id of all subject's fathers
     """
 
     def __init__(self, is_approved: bool, sql_id: int, name: str, is_enrollable: bool) -> None:
         super().__init__(sql_id=sql_id, name=name, is_enrollable=is_enrollable)
         self.is_approved = is_approved
+        self.list_str_children = [{'name': child.name, 'id': child.sql_id}
+                                  for child in self.children]
+        self.list_str_fathers = [{'name': father.name, 'id': father.sql_id}
+                                 for father in self.fathers]
 
     def __str__(self) -> str:
-        str_children = [child.name for child in self.children]
-        str_fathers = [father.name for father in self.fathers]
-
         r = str(
             f'ID: {self.sql_id}\n' +
-            f'FATHERS: {str_fathers}\n' +
+            f'FATHERS: {self.list_str_fathers}\n' +
             f'NAME: {self.name}\n' +
-            f'CHILDREN: {str_children}\n' +
+            f'CHILDREN: {self.list_str_children}\n' +
             f'IS_APPROVED: {self.is_approved}\n' +
             f'IS_ENROLLABLE: {self.is_enrollable}\n'
         )
@@ -76,12 +84,23 @@ class ApprovalSubject(Subject):
         """
 
         if isinstance(subject, ApprovalSubject):
-            # verificar que no exista ya en el arbol
-            #
-            subject.fathers.append(self)
-            self.children.append(subject)
+            if subject not in self.children:
+                subject.fathers.append(self)
+                self.children.append(subject)
         else:
             raise ValueError('Child must be ApprovalSubject')
+
+    def as_dict(self) -> dict:
+        data = {
+            'name': self.name,
+            'id': self.sql_id,
+            'fathers': self.list_str_fathers,
+            'children': self.list_str_children,
+            'approved': self.is_approved,
+            'enrollable': self.is_enrollable
+        }
+
+        return data
 
 
 class RegularSubject(Subject):
@@ -195,6 +214,7 @@ class SubjectTreeDB():
         self.tree = self.create(tree_type=tree_type, career=career)
         self.career = career
 
+    @classmethod
     def parseStrList(self, str_list: str) -> list:
         """
         Parse from str('int,int') to list(int,int)
@@ -256,8 +276,11 @@ class SubjectTreeDB():
         for sql_id in sql_ids:
             subject = UTNSubject.objects.get(id=sql_id)
 
+            subject_children = self.parseStrList(subject.approval_children)
+
             approval_subject = ApprovalSubject(
                 is_approved=False, sql_id=subject.id, name=subject.name, is_enrollable=False)
+
             tree.addSubject(
                 father_sql_id=actual_subject.sql_id, child_subject=approval_subject)
 

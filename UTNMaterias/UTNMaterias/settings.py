@@ -104,4 +104,9 @@ USE_TZ = True
 
 STATIC_URL = os.path.join(BASE_DIR, 'UTNMaterias/static/')
 
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'UTNMaterias/static'),
+]
+
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
