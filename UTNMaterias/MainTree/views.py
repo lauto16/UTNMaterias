@@ -4,20 +4,32 @@ from django.http import JsonResponse
 import requests
 
 
-def index(request):
-    # combine trees
-    db_tree = SubjectTreeDB(career='sistemas', tree_type='approval')
+def index(request, career: str):
+    careers = [
+        'civil',
+        'electrica',
+        'electronica',
+        'industrial',
+        'mecanica',
+        'metalurgica',
+        'quimica',
+        'sistemas'
+    ]
+
+    print(career)
+    """    db_tree = SubjectTreeDB(career='sistemas', tree_type='approval')
     print(db_tree.tree)
 
     if request.method == 'POST':
         data = json.loads(request.body)
         action = data['action']
         # CUANDO SE QUIERA CONSULTAR SOLO LOS DATOS DE UN SUBJECT, RECURRIMOS A LA API REST QUE VAMOS A CREAR
-        # CUANDO SE QUIERA CREAR TOD0 EL ARBOL Y PASARLO AL FRONT HACERLO DESDE LA VISTA EN BACKEND
+        # CUANDO SE QUIERA CREAR TOD0 EL ARBOL Y PASARLO AL FRONT HACERLO DESDE LA VISTA EN BACKEND"""
 
     return render(request, 'index.html')
 
-    """
+
+"""
 
 from MainTree.models import UTNSubject
 from django.http import JsonResponse
