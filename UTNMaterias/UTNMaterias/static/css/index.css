@@ -1,0 +1,21 @@
+body{
+    background-color: #eaeaf7;
+    height: 100dvh;
+}
+
+#selector-title{
+    text-align: center;
+    color: #706579;
+}
+
+#selector{
+    display: flex;
+    flex-direction: column;
+    margin-left: 30%;
+    margin-right: 30%;
+    margin-top: 5%;
+    width: 40%;
+    height: 60%;
+    border: 1px solid #000;
+}
+

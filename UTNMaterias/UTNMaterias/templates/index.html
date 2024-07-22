@@ -4,10 +4,23 @@
     {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+    <title>UTN Materias</title>
 </head>
 <body>
-    <p>utn materias</p>
+    <h1 id="selector-title">Seleccion&aacute; tu carrera</h1>
+    <div id="selector">
+        <ul id="careers-list">
+            <div class="career" id="civil">INGENIERIA CIVIL</div>
+            <div class="career" id="electrica">INGENIERIA ELECTRICA</div>
+            <div class="career" id="electronica">INGENIERIA ELECTRONICA</div>
+            <div class="career" id="industrial">INGENIERIA INDUSTRIAL</div>
+            <div class="career" id="mecanica">INGENIERIA MECANICA</div>
+            <div class="career" id="metalurgica">INGENIERIA METALURGICA</div>
+            <div class="career" id="quimica">INGENIERIA QUIMICA</div>
+            <div class="career" id="sistemas">INGENIERIA EN SISTEMAS DE INFORMACION</div>
+        </ul>
+    </div>
 </body>
 <script src="{% static 'js/index.js' %}"></script>
 </html>
