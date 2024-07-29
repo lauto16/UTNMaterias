@@ -1,0 +1,19 @@
+.subject{
+    height: 60px;
+    width: 200px;
+    border: 1px solid #000;
+    background: #b5dcf7;
+    text-align: center;
+    align-content: center;
+    transition: ease opacity 0.3s;
+    margin-top: 20px;
+}
+
+.subject-name{
+    margin: 0;
+}
+
+.subject:hover{
+    opacity: 0.7;
+    cursor: pointer;
+}

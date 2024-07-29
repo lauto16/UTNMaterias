@@ -26,10 +26,28 @@ def index(request, career: str):
     db_tree = SubjectTreeDB(career=career, tree_type='approval')
     print(db_tree.tree)
 
-    """if request.method == 'POST':
+    if request.method == 'POST':
         data = json.loads(request.body)
         action = data['action']
-        # CUANDO SE QUIERA CONSULTAR SOLO LOS DATOS DE UN SUBJECT, RECURRIMOS A LA API REST QUE VAMOS A CREAR
-        # CUANDO SE QUIERA CREAR TOD0 EL ARBOL Y PASARLO AL FRONT HACERLO DESDE LA VISTA EN BACKEND"""
+
+        if action == 'get_tree':
+            """
+            la forma de enviar el arbol sera mediante JsonResponse({
+                'success': Bool,
+
+                'materia1': {
+                        id: 1,
+                        name: 'Analisis matematico',
+                        children: [2,3,5]
+                },
+                'materia2': {
+                        id: 2,
+                        name: 'Fisica',
+                        children: [3,5]
+                },
+            })
+
+            """
+            return JsonResponse({'success': True})
 
     return render(request, 'index.html')

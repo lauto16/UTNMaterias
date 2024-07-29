@@ -53,3 +53,37 @@ function getSubject(subject_id) {
             throw error; 
         });
 }
+
+
+function getTree(){
+    let requestOptions = {
+
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            "X-CSRFToken": getCookie('csrftoken'),
+        }, 
+        body: JSON.stringify({
+            action: 'get_tree'
+        })
+    };
+
+    fetch(window.location.href, requestOptions)
+
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Network response was not ok.');
+        })
+
+        .then(data => {
+            console.log(data)
+        })
+
+        .catch(error => {
+            console.error('There was a problem with the fetch operation:', error);
+        });
+}
+
+getTree()
