@@ -31,6 +31,7 @@ class Subject(ABC):
         self.is_enrollable = is_enrollable
         self.fathers = []
         self.children = []
+        self.year = None
 
     @abstractmethod
     def __str__(self) -> str:
@@ -56,9 +57,10 @@ class ApprovalSubject(Subject):
         self.list_str_fathers: list -> Contains name and sql_id of all subject's fathers
     """
 
-    def __init__(self, is_approved: bool, sql_id: int, name: str, is_enrollable: bool) -> None:
+    def __init__(self, is_approved: bool, sql_id: int, name: str, is_enrollable: bool, year: int) -> None:
         super().__init__(sql_id=sql_id, name=name, is_enrollable=is_enrollable)
         self.is_approved = is_approved
+        self.year = year
 
     def __str__(self) -> str:
         return str(self.as_dict())
@@ -210,8 +212,8 @@ class SubjectTreeDB():
     """
 
     def __init__(self, career: str, tree_type: str) -> None:
-        self.tree = self.create(tree_type=tree_type, career=career)
         self.career = career
+        self.tree = self.create(tree_type=tree_type, career=self.career)
 
     @classmethod
     def parseStrList(self, str_list: str) -> list:
@@ -243,6 +245,60 @@ class SubjectTreeDB():
         final_list.append(int(number))
         return final_list
 
+    def travel_tree(self, actual_subject: Subject, nodes=[]) -> list:
+        if actual_subject.year == 0:
+            nodes.append(actual_subject)
+        for child in actual_subject.children:
+            nodes.append(child)
+            self.travel_tree(actual_subject=child, nodes=nodes)
+
+        return nodes
+
+    def as_dict(self) -> dict:
+        """
+        Returns the SubjectTree represented as a dictionary
+
+        {    
+            'year0':[
+                {
+                    id: 1,
+                    name: 'Analisis matematico',
+                    children: [2,3,5]
+                },
+            ]
+
+        }
+
+        Returns:
+            dict: Tree represented as dictionary
+        """
+        children = self.travel_tree(actual_subject=self.tree.root)
+        children_by_year = [[] for _ in range(7)]
+        added = []
+
+        for child in children:
+            if child.sql_id in added:
+                continue
+            children_by_year[child.year].append(child)
+            added.append(child.sql_id)
+
+        for year_list in children_by_year:
+            year_list.sort(key=lambda x: x.sql_id)
+
+        year_subject_dict = {}
+        for year, year_list in enumerate(children_by_year):
+            key = 'year_' + str(year)
+            year_subject_dict[key] = year_list
+            for i, subject in enumerate(year_list):
+                subject_dict = {
+                    'id': subject.sql_id,
+                    'name': subject.name,
+                    'children': [x.sql_id for x in subject.children],
+                }
+                year_list[i] = subject_dict
+
+        return year_subject_dict
+
     def create(self, tree_type: str, career: str) -> SubjectTree:
         """
         Builds the tree structure using the database data
@@ -258,7 +314,7 @@ class SubjectTreeDB():
         if tree_type == 'approval':
             ingreso = UTNSubject.objects.get(approval_fathers=career)
             ingreso_subject = ApprovalSubject(
-                is_approved=False, sql_id=ingreso.id, name=ingreso.name, is_enrollable=True)
+                is_approved=False, sql_id=ingreso.id, name=ingreso.name, is_enrollable=True, year=0)
 
             tree = ApprovalTree(root=ingreso_subject)
             ingreso_children_ids = self.parseStrList(ingreso.approval_children)
@@ -285,7 +341,7 @@ class SubjectTreeDB():
             # ami, aga, etc...
             child_subject = UTNSubject.objects.get(id=sql_id)
             child = ApprovalSubject(
-                is_approved=False, is_enrollable=False, name=child_subject.name, sql_id=child_subject.id)
+                is_approved=False, is_enrollable=False, name=child_subject.name, sql_id=child_subject.id, year=child_subject.year)
 
             if child.sql_id in added_nodes:
                 found_subject = tree.search(

@@ -17,9 +17,6 @@ function getCookie(name) {
 
 function getSubject(subject_id) {
     /*
-    Returns the data of a Subject when subject_id is passed as an argument
-    (The data comes from SubjectAPI)
-
     Usage:
     
     getSubject(13)
@@ -86,4 +83,52 @@ function getTree(){
         });
 }
 
+
+function generateTree(subjects){
+    // length = subjects.length() + 6
+    const length = 66
+    const container = document.getElementById('grid-container')
+
+    // generar los slots del grid
+    let year = 0
+    for (let i = 0; i < 66; i++) {
+
+        if(i % 11 == 0){
+            year += 1
+            new_descriptor = document.createElement('div')
+            new_descriptor.setAttribute('class', 'descriptor')
+            new_descriptor.textContent = 'Año: ' + year.toString()
+            container.appendChild(new_descriptor)
+        }
+        else{
+            new_slot = document.createElement('div')
+            new_slot.setAttribute('class', 'subject')
+            container.appendChild(new_slot)
+        }
+    }
+
+}
+
+
 getTree()
+generateTree()
+
+/*
+
+    <div class="subject">
+        <p class="subject-name">
+            Analisis matem&aacute;tico
+        </p>
+    </div>
+    <div class="subject">
+        <p class="subject-name">
+            F&iacute;sica 1
+        </p>
+    </div>
+    <div class="subject">
+        <p class="subject-name">
+            &Aacute;lgebra y geometria anal&iacute;tica
+        </p>
+    </div>
+
+*/

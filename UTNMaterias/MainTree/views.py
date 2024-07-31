@@ -23,9 +23,6 @@ def index(request, career: str):
     if not (career in careers):
         raise Http404("La carrera seleccionada no existe.")
 
-    db_tree = SubjectTreeDB(career=career, tree_type='approval')
-    print(db_tree.tree)
-
     if request.method == 'POST':
         data = json.loads(request.body)
         action = data['action']
@@ -48,6 +45,9 @@ def index(request, career: str):
             })
 
             """
-            return JsonResponse({'success': True})
+
+            db_tree = SubjectTreeDB(career=career, tree_type='approval')
+
+            return JsonResponse({'success': True, 'tree': db_tree.as_dict()})
 
     return render(request, 'index.html')
