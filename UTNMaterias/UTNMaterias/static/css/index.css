@@ -19,7 +19,7 @@ body{
     margin-right: 1%;
 }
 
-#ingreso{
+.ingreso{
     height: 70px;
     width: 96%;
     margin-left: 2%;
@@ -41,7 +41,7 @@ body{
     cursor: pointer;
 }
 
-.subject{
+.subject_style{
     height: 70px;
     width: 90%;
     margin-left: 5%;

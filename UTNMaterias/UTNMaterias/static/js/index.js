@@ -73,6 +73,7 @@ function getTree(career){
 
         .then(data => {
             console.log(data)
+            generateTree(data)
         })
 
         .catch(error => {
@@ -81,49 +82,61 @@ function getTree(career){
 }
 
 
-function generateTree(subjects){
-    // length = subjects.length() + 6
-    const length = 66
-    const container = document.getElementById('grid-container')
-
-    // generar los slots del grid
-    let year = 0
-    for (let i = 0; i < 66; i++) {
-
-        if(i % 11 == 0){
-            year += 1
-            new_descriptor = document.createElement('div')
-            new_descriptor.setAttribute('class', 'descriptor')
-            new_descriptor.textContent = 'Año: ' + year.toString()
-            container.appendChild(new_descriptor)
+function ChangeSubjectStyle(classname, color, border){
+    elements = document.querySelectorAll(`.${classname}`)
+    elements.forEach(element => {
+        if(element.textContent.length == 0){
+            element.style.backgroundColor = color
+            element.style.border = border
         }
-        else{
-            new_slot = document.createElement('div')
-            new_slot.setAttribute('class', 'subject')
-            container.appendChild(new_slot)
+    });
+}
+
+
+function generateTree(tree) {
+    const container = document.getElementById('grid-container');
+    const years = Object.values(tree);
+    let yearCounter = 0;
+
+    //  generate grid
+    for (let i = 0; i < 66; i++) {
+        if (i % 11 === 0) {
+            yearCounter++;
+            const descriptor = document.createElement('div');
+            descriptor.className = 'descriptor';
+            descriptor.textContent = `Año: ${yearCounter}`;
+            container.appendChild(descriptor);
+        } else {
+            const id = `subject_${i - 11 * yearCounter + 10}_year_${yearCounter}`;
+            const subjectSlot = document.createElement('div');
+            subjectSlot.className = 'subject subject_style';
+            subjectSlot.id = id;
+            container.appendChild(subjectSlot);
         }
     }
 
+    // get all the subjects slots
+    const subjectsDivs = document.querySelectorAll('.subject');
+
+    subjectsDivs.forEach(subjectDiv => {
+        // get the year by splitting the div's id 
+        const year = parseInt(subjectDiv.id.split('_').pop(), 10);
+        const yearSubjects = years[year - 1];
+
+        yearSubjects.forEach((subject, index) => {
+            // if year == 1 then it's ingreso
+            if (year !== 1) {
+                const newId = `subject_${index}_year_${year - 1}`;
+                const subjectElement = document.getElementById(newId);
+                if (subjectElement) {
+                    subjectElement.textContent = subject.name;
+                }
+            }
+            // it's ingreso
+            else{
+                document.getElementById('subject_0_year_0').className = 'subject ingreso'
+            }
+        });
+    });
+    ChangeSubjectStyle('subject', '#eaeaf7', 0)
 }
-
-generateTree()
-
-/*
-
-    <div class="subject">
-        <p class="subject-name">
-            Analisis matem&aacute;tico
-        </p>
-    </div>
-    <div class="subject">
-        <p class="subject-name">
-            F&iacute;sica 1
-        </p>
-    </div>
-    <div class="subject">
-        <p class="subject-name">
-            &Aacute;lgebra y geometria anal&iacute;tica
-        </p>
-    </div>
-
-*/
