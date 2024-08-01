@@ -3,10 +3,12 @@ from django.urls import path, include
 from MainTree.views import *
 from Selector.views import *
 from SubjectAPI.urls import *
+from TreeAPI.urls import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', selector_view, name='selector'),
     path('index/<str:career>', index, name='index'),
-    path('apis/', include('SubjectAPI.urls'))
+    path('subject_api/', include('SubjectAPI.urls')),
+    path('tree_api/', include('TreeAPI.urls'))
 ]

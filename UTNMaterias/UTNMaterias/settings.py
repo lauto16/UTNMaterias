@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'MainTree',
     'Selector',
     'SubjectAPI',
+    'TreeAPI'
 ]
 
 MIDDLEWARE = [

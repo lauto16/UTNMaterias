@@ -4,8 +4,6 @@ from rest_framework.views import APIView
 from django.shortcuts import render
 from MainTree.subject_tree import *
 from django.http import JsonResponse, Http404
-import requests
-from random import choice
 
 
 def index(request, career: str):
