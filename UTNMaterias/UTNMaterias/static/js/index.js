@@ -52,20 +52,17 @@ function getSubject(subject_id) {
 }
 
 
-function getTree(){
+function getTree(career){
     let requestOptions = {
 
-        method: 'POST',
+        method: 'GET',
         headers: {
             'Content-Type': 'application/json',
             "X-CSRFToken": getCookie('csrftoken'),
-        }, 
-        body: JSON.stringify({
-            action: 'get_tree'
-        })
+        }
     };
 
-    fetch(window.location.href, requestOptions)
+    fetch(`${window.location.origin}/tree_api/tree/career/${career}`, requestOptions)
 
         .then(response => {
             if (response.ok) {
@@ -109,8 +106,6 @@ function generateTree(subjects){
 
 }
 
-
-getTree()
 generateTree()
 
 /*
