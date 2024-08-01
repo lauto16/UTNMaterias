@@ -82,12 +82,23 @@ function getTree(career){
 }
 
 
-function ChangeSubjectStyle(classname, color, border){
+function changeSubjectStyle(classname, color, border){
     elements = document.querySelectorAll(`.${classname}`)
     elements.forEach(element => {
         if(element.textContent.length == 0){
             element.style.backgroundColor = color
             element.style.border = border
+        }
+    });
+}
+
+
+function setInUse(classname){
+    elements = document.querySelectorAll(`.${classname}`)
+    elements.forEach(element => {
+        console.log("dsa")
+        if (element.textContent.length > 0) {
+            element.className = element.className + ' inUse'
         }
     });
 }
@@ -134,9 +145,14 @@ function generateTree(tree) {
             }
             // it's ingreso
             else{
-                document.getElementById('subject_0_year_0').className = 'subject ingreso'
+                document.getElementById('subject_0_year_0').className = 'subject ingreso inUse'
             }
         });
     });
-    ChangeSubjectStyle('subject', '#eaeaf7', 0)
+    // change the state of the used slots so them can be distingued from unused ones 
+    setInUse('subject')
+    // sets the background color and border of the unused slots so that they are invisible
+    changeSubjectStyle('subject', '#eaeaf7', 0)
+    // sets onClick event listeners to all inUse elements
+    //setEventListeners('subject inUse')
 }
