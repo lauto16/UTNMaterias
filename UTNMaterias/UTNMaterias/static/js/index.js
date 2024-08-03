@@ -19,17 +19,16 @@ function getSubject(subject_id) {
     /*
     Usage:
     
-    getSubject(13)
-    .then(data => {
-        console.log(data)
-    })
-    .catch(error => {
-        console.error('Error fetching subject:', error)
-    })
+            getSubject(element.id.split('_')[1])
+            .then(data => {
+                console.log(data)
+            })
+            .catch(error => {
+                console.error('Error fetching subject:', error)
+            })
 
     */
-    const query = './apis/subjects/' + subject_id.toString()
-
+    const query = `${window.location.origin}/subject_api/subjects/${subject_id.toString()}`
     let requestOptions = {
         method: 'GET',
         headers: {
@@ -99,8 +98,21 @@ function setInUse(classname){
     elements.forEach(element => {
         if (element.textContent.length > 0) {
             element.className = element.className + ' inUse'
+            element.setAttribute('data-state', 'null')
         }
     })
+}
+
+
+function changeState(element){
+    if(element.getAttribute('data-state') == 'null'){
+        element.setAttribute('data-state', 'approved')
+        element.style.backgroundColor = '#bdeda4'
+    }
+    else if(element.getAttribute('data-state') == 'approved'){
+        element.setAttribute('data-state', 'null')
+        element.style.backgroundColor = '#b5dcf7'
+    }
 }
 
 
@@ -117,7 +129,7 @@ function setEventListeners(classname1, classname2){
     }
     in_use.forEach(element => {
         element.addEventListener('click', function(e){
-            console.log(element.id)
+            changeState(element)
         })
     })
 }
@@ -128,7 +140,7 @@ function generateTree(tree) {
     const years = Object.values(tree)
     let yearCounter = 0
 
-    //  generate grid
+    // generate grid
     for (let i = 0; i < 66; i++) {
         if (i % 11 === 0) {
             yearCounter++
@@ -169,10 +181,14 @@ function generateTree(tree) {
             }
         })
     })
+
+
     // change the state of the used slots so them can be distingued from unused ones 
     setInUse('subject')
-    // sets the background color and border of the unused slots so that they are invisible
+    // sets the background color, border and id of the unused slots so that they are invisible
     changeSubjectStyle('subject', '#eaeaf7', 0)
     // sets onClick event listeners to all inUse elements
     setEventListeners('subject', 'inUse')
 }
+
+
