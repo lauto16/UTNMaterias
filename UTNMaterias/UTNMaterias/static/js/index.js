@@ -71,7 +71,6 @@ function getTree(career){
         })
 
         .then(data => {
-            console.log(data)
             generateTree(data)
         })
 
@@ -104,19 +103,138 @@ function setInUse(classname){
 }
 
 
-function changeState(element){
-    if(element.getAttribute('data-state') == 'null'){
-        element.setAttribute('data-state', 'approved')
-        element.style.backgroundColor = '#bdeda4'
+function getSubjectState(element) {
+    return element.getAttribute('data-state')
+}
+
+
+function getSubjectFromTree(tree, subject_id){
+    subject_id = parseInt(subject_id)
+    if (subject_id === 0){
+        subject_id = 1
     }
-    else if(element.getAttribute('data-state') == 'approved'){
-        element.setAttribute('data-state', 'null')
-        element.style.backgroundColor = '#b5dcf7'
+    const all_subjects = Object.values(tree).flat()
+    for (let i = 0; i < all_subjects.length; i++) {
+        const subject = all_subjects[i];
+        if(subject.id === subject_id){
+            return subject
+        }
+        
     }
 }
 
 
-function setEventListeners(classname1, classname2){
+function isEnrollable(subject, tree){
+    for (let i = 0; i < subject.fathers.length; i++) {
+        const father_id = subject.fathers[i];
+        const father = getSubjectFromTree(tree, father_id)
+        
+        // check regularity too...
+        if (!father.is_approved) {
+            return false
+        }
+    }
+    return true
+}
+
+
+function changeHtmlStates(subject){
+    if(subject.id === 1){
+        // it's ingreso
+        var subject_div = document.getElementById(`subject_${subject.id - 1}_year_0`)
+    }
+
+    else{
+        var subject_div = document.getElementById(`subject_${subject.id}`)
+    }
+
+    if (subject.is_approved) {
+        subject_div.setAttribute('data-state', 'approved')
+        subject_div.style.backgroundColor = '#bdeda4'   
+    }
+    else {
+        subject_div.setAttribute('data-state', 'null')
+        if (subject.is_enrollable){
+            subject_div.style.backgroundColor = '#d0d7d9'    
+        }
+        else{
+            subject_div.style.backgroundColor = '#b5dcf7'    
+        }
+    }
+}
+
+
+function updateTree(tree){
+
+    let all_subjects = Object.values(tree).flat()
+    let subject_slots = document.querySelectorAll('.inUse')
+
+    for (let i = 0; i < all_subjects.length; i++) {
+        let subject = all_subjects[i]
+        
+        // check enrollability
+        if(isEnrollable(subject, tree)){
+            subject.is_enrollable = true
+        }
+        else{
+            subject.is_enrollable = false
+            subject.is_approved = false
+        }
+        // set as enrollable because it has been approved
+        if (subject.is_approved){
+            subject.is_enrollable = true    
+        }
+
+
+        //change tree colors
+        changeHtmlStates(subject)
+        
+        
+    }
+
+    return tree
+}
+
+
+function changeState(element, tree){
+    if(element.getAttribute('data-state') == 'null'){
+        let element_id = element.id.split('_')[1]
+        let subject = getSubjectFromTree(tree, element_id)
+        
+        if(subject.is_enrollable){
+            element.setAttribute('data-state', 'approved')
+            element.style.backgroundColor = '#bdeda4'
+            subject.is_approved = true
+        }
+        else{
+            console.error(`${subject.name} is not enrollable yet`)
+        }
+
+    }
+    else if(element.getAttribute('data-state') == 'approved'){
+        element.setAttribute('data-state', 'null')
+        element.style.backgroundColor = '#b5dcf7'
+        let element_id = element.id.split('_')[1]
+        let subject = getSubjectFromTree(tree, element_id)
+        subject.is_approved = false
+    }
+
+    tree = updateTree(tree)
+    console.log(tree)
+    /*
+    poner como aprobadas
+    y regulares todas las anteriores necesarias (recursivamente)
+    */
+
+    /* 
+    recorrer el arbol entero buscando por:
+        -materias que puedan ser cursadas (terminado)
+        -materias que no puedan ser cursadas (terminado)
+    */
+}
+
+
+function setEventListeners(classname1, classname2, tree){
 
     //  all subjects
     elements = document.querySelectorAll(`.${classname1}`)
@@ -129,7 +247,7 @@ function setEventListeners(classname1, classname2){
     }
     in_use.forEach(element => {
         element.addEventListener('click', function(e){
-            changeState(element)
+            changeState(element, tree)
         })
     })
 }
@@ -177,7 +295,9 @@ function generateTree(tree) {
             }
             // it's ingreso
             else{
-                document.getElementById('subject_0_year_0').className = 'subject ingreso inUse'
+                ingreso = document.getElementById('subject_0_year_0')
+                ingreso.className = 'subject ingreso'
+                ingreso.setAttribute('data-state', 'null')
             }
         })
     })
@@ -188,7 +308,6 @@ function generateTree(tree) {
     // sets the background color, border and id of the unused slots so that they are invisible
     changeSubjectStyle('subject', '#eaeaf7', 0)
     // sets onClick event listeners to all inUse elements
-    setEventListeners('subject', 'inUse')
+    setEventListeners('subject', 'inUse', tree)
 }
-
 

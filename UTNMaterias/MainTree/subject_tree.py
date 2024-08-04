@@ -294,7 +294,9 @@ class SubjectTreeDB():
                     'id': subject.sql_id,
                     'name': subject.name,
                     'children': [x.sql_id for x in subject.children],
-                    'approved': False
+                    'fathers': [x.sql_id for x in subject.fathers],
+                    'is_approved': subject.is_approved,
+                    'is_enrollable': subject.is_enrollable
                 }
                 year_list[i] = subject_dict
 
