@@ -21,7 +21,8 @@ class Subject(ABC):
         self.name: str -> The subject's name
         self.is_regular: bool -> True if the user is regular at the subject
         self.is_enrollable: bool -> True if the user can register for the subject
-        self.children: list = Represents the Subject's children.
+        self.children: list -> Represents the Subject's children.
+        self.year: int -> Represents in wich year of the career is the subject
     """
 
     def __init__(self, sql_id: int, name: str, is_enrollable: bool) -> None:
@@ -53,8 +54,6 @@ class ApprovalSubject(Subject):
 
     Args:
         self.is_approved: bool -> True if the user completely finished the subject
-        self.list_str_children: list -> Contains name and sql_id of all subject's children
-        self.list_str_fathers: list -> Contains name and sql_id of all subject's fathers
     """
 
     def __init__(self, is_approved: bool, sql_id: int, name: str, is_enrollable: bool, year: int) -> None:
@@ -65,7 +64,7 @@ class ApprovalSubject(Subject):
     def __str__(self) -> str:
         return str(self.as_dict())
 
-    def addChild(self, subject) -> None:
+    def addChild(self, subject: Subject) -> None:
         """
         Adds a new Subject child to the current Subject
 
@@ -104,7 +103,58 @@ class ApprovalSubject(Subject):
 
 
 class RegularSubject(Subject):
-    pass
+    """
+    Represents a subject that needs to be regular so that the user
+    can register as a student of the subject's children.
+
+    Args:
+        self.regular: bool -> True if the user is regular at the subject
+    """
+
+    def __init__(self, is_regular: bool, sql_id: int, name: str, is_enrollable: bool, year: int) -> None:
+        super().__init__(sql_id=sql_id, name=name, is_enrollable=is_enrollable)
+        self.is_regular = is_regular
+        self.year = year
+
+    def __str__(self) -> str:
+        return str(self.as_dict())
+
+    def addChild(self, subject: Subject) -> None:
+        """
+        Adds a new Subject child to the current Subject
+
+        Args:
+            subject (Subject): Subject object
+        """
+
+        if isinstance(subject, RegularSubject):
+            for child in self.children:
+                if subject.sql_id == child.sql_id:
+                    return
+            for father in subject.fathers:
+                if self.sql_id == father.sql_id:
+                    return
+
+            subject.fathers.append(self)
+            self.children.append(subject)
+        else:
+            raise ValueError('Child must be RegularSubject')
+
+    def as_dict(self) -> dict:
+        list_str_children = [({'name': child.name, 'id': child.sql_id})
+                             for child in self.children]
+        list_str_fathers = [({'name': father.name, 'id': father.sql_id})
+                            for father in self.fathers]
+        data = {
+            'name': self.name,
+            'id': self.sql_id,
+            'fathers': list_str_fathers,
+            'children': list_str_children,
+            'regular': self.is_regular,
+            'enrollable': self.is_enrollable
+        }
+
+        return data
 
 
 class SubjectTree(ABC):
@@ -168,7 +218,33 @@ class SubjectTree(ABC):
 
 
 class RegularTree(SubjectTree):
-    pass
+    """
+    A Tree that contains RegularSubjects objects as nodes, representing
+    the regularity path that any student follows to finish the career
+    """
+
+    def __init__(self, root) -> None:
+        super().__init__(root=root)
+
+    def __str__(self) -> str:
+        return super().__str__()
+
+    def search(self, sql_id: int, actual_subject: RegularSubject):
+        if actual_subject.sql_id == sql_id:
+            return actual_subject
+        for child in actual_subject.children:
+            found = self.search(sql_id=sql_id, actual_subject=child)
+            if found:
+                return found
+        return None
+
+    def addSubject(self, father_sql_id: int, child_subject: RegularSubject) -> None:
+        father_subject = self.search(
+            sql_id=father_sql_id, actual_subject=self.root)
+        if father_subject:
+            father_subject.addChild(child_subject)
+        else:
+            raise Exception("Couldn't add the subject, father doesn't exist")
 
 
 class ApprovalTree(SubjectTree):
@@ -213,7 +289,8 @@ class SubjectTreeDB():
 
     def __init__(self, career: str, tree_type: str) -> None:
         self.career = career
-        self.tree = self.create(tree_type=tree_type, career=self.career)
+        self.tree_type = tree_type
+        self.tree = self.create(tree_type=self.tree_type, career=self.career)
 
     @classmethod
     def parseStrList(self, str_list: str) -> list:
@@ -246,6 +323,16 @@ class SubjectTreeDB():
         return final_list
 
     def travel_tree(self, actual_subject: Subject, nodes=[]) -> list:
+        """
+        Travels the entire tree returning a list of all the nodes
+
+        Args:
+            actual_subject (Subject): The subject where the traveling starts
+            nodes (list, optional): List that will contain all the nodes through the recursive stack. Defaults to [].
+
+        Returns:
+            list: A list of nodes
+        """
         if actual_subject.year == 0:
             nodes.append(actual_subject)
         for child in actual_subject.children:
@@ -258,12 +345,13 @@ class SubjectTreeDB():
         """
         Returns the SubjectTree represented as a dictionary
 
-        {    
+        {
             'year0':[
                 {
                     id: 1,
                     name: 'Analisis matematico',
                     children: [2,3,5]
+                    ...
                 },
             ]
 
@@ -290,15 +378,28 @@ class SubjectTreeDB():
             key = 'year_' + str(year)
             year_subject_dict[key] = year_list
             for i, subject in enumerate(year_list):
-                subject_dict = {
-                    'id': subject.sql_id,
-                    'name': subject.name,
-                    'children': [x.sql_id for x in subject.children],
-                    'fathers': [x.sql_id for x in subject.fathers],
-                    'is_approved': subject.is_approved,
-                    'is_enrollable': subject.is_enrollable
-                }
-                year_list[i] = subject_dict
+
+                if self.tree_type == 'approval':
+                    subject_dict = {
+                        'id': subject.sql_id,
+                        'name': subject.name,
+                        'children': [x.sql_id for x in subject.children],
+                        'fathers': [x.sql_id for x in subject.fathers],
+                        'is_approved': subject.is_approved,
+                        'is_enrollable': subject.is_enrollable
+                    }
+                    year_list[i] = subject_dict
+
+                elif self.tree_type == 'regular':
+                    subject_dict = {
+                        'id': subject.sql_id,
+                        'name': subject.name,
+                        'children': [x.sql_id for x in subject.children],
+                        'fathers': [x.sql_id for x in subject.fathers],
+                        'is_regular': subject.is_regular,
+                        'is_enrollable': subject.is_enrollable
+                    }
+                    year_list[i] = subject_dict
 
         return year_subject_dict
 
@@ -313,6 +414,7 @@ class SubjectTreeDB():
         Returns:
             SubjectTree: when the transaction was successfull and the tree was created correctly
         """
+        tree = None
 
         if tree_type == 'approval':
             ingreso = UTNSubject.objects.get(approval_fathers=career)
@@ -322,17 +424,25 @@ class SubjectTreeDB():
             tree = ApprovalTree(root=ingreso_subject)
             ingreso_children_ids = self.parseStrList(ingreso.approval_children)
 
-            tree = self.recursive_tree_build(
+            tree = self.recursive_approval_tree_build(
                 sql_ids=ingreso_children_ids, tree=tree, actual_subject=tree.root, added_nodes=[tree.root.sql_id])
 
         elif tree_type == 'regular':
-            pass
+            ingreso = UTNSubject.objects.get(regular_fathers=career)
+            ingreso_subject = RegularSubject(
+                is_regular=False, sql_id=ingreso.id, name=ingreso.name, is_enrollable=True, year=0)
+
+            tree = RegularTree(root=ingreso_subject)
+            ingreso_children_ids = self.parseStrList(ingreso.regular_children)
+
+            tree = self.recursive_regular_tree_build(
+                sql_ids=ingreso_children_ids, tree=tree, actual_subject=tree.root, added_nodes=[tree.root.sql_id])
 
         return tree
 
-    def recursive_tree_build(self, tree: SubjectTree, sql_ids: list, actual_subject: Subject, added_nodes: list) -> SubjectTree:
+    def recursive_approval_tree_build(self, tree: SubjectTree, sql_ids: list, actual_subject: Subject, added_nodes: list) -> SubjectTree:
         """
-        Generates a tree using recursion an database info.
+        Generates an approval tree using recursion an database info.
 
         Args:
             tree (SubjectTree): Base tree
@@ -356,8 +466,39 @@ class SubjectTreeDB():
                 actual_subject.addChild(child)
                 added_nodes.append(child.sql_id)
 
-            self.recursive_tree_build(tree=tree, sql_ids=self.parseStrList(
+            self.recursive_approval_tree_build(tree=tree, sql_ids=self.parseStrList(
                 child_subject.approval_children), actual_subject=child, added_nodes=added_nodes)
+
+        return tree
+
+    def recursive_regular_tree_build(self, tree: SubjectTree, sql_ids: list, actual_subject: Subject, added_nodes: list) -> SubjectTree:
+        """
+        Generates a regularity tree using recursion an database info.
+
+        Args:
+            tree (SubjectTree): Base tree
+            sql_ids (list): Ingreso subject children sql_id's list
+            added_nodes (list): The nodes that already exist at the tree
+            actual_subject (Subject): The current subject
+        """
+        for sql_id in sql_ids:
+            # ami, aga, etc...
+            child_subject = UTNSubject.objects.get(id=sql_id)
+            child = RegularSubject(
+                is_regular=False, is_enrollable=False, name=child_subject.name, sql_id=child_subject.id, year=child_subject.year)
+
+            if child.sql_id in added_nodes:
+                found_subject = tree.search(
+                    sql_id=child.sql_id, actual_subject=tree.root)
+                if found_subject:
+                    actual_subject.addChild(found_subject)
+
+            else:
+                actual_subject.addChild(child)
+                added_nodes.append(child.sql_id)
+
+            self.recursive_regular_tree_build(tree=tree, sql_ids=self.parseStrList(
+                child_subject.regular_children), actual_subject=child, added_nodes=added_nodes)
 
         return tree
 
