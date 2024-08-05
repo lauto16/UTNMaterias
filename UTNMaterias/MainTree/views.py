@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from django.shortcuts import render
 from MainTree.subject_tree import *
 from django.http import JsonResponse, Http404
+from .subject_tree import SubjectTreeDB
 
 
 def index(request, career: str):

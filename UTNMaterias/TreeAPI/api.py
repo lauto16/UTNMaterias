@@ -19,7 +19,12 @@ class TreeViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='career/(?P<career>[^/.]+)')
     def get_tree(self, request, career=None):
         if career:
-            subject_tree = SubjectTreeDB(
-                career=career, tree_type='approval').as_dict()
-            return Response(subject_tree)
+            approval_subject_tree = SubjectTreeDB(
+                career=career, tree_type='approval')
+
+            regular_subject_tree = SubjectTreeDB(
+                career=career, tree_type='regular')
+
+            return Response({'approval': approval_subject_tree.as_dict(),
+                             'regular': regular_subject_tree.as_dict()})
         return Response({"error": "Career not specified"}, status=400)

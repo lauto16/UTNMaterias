@@ -292,8 +292,8 @@ class SubjectTreeDB():
         self.tree_type = tree_type
         self.tree = self.create(tree_type=self.tree_type, career=self.career)
 
-    @classmethod
-    def parseStrList(self, str_list: str) -> list:
+    @staticmethod
+    def parse_str_list(str_list: str) -> list:
         """
         Parse from str('int,int') to list(int,int)
         example: '1,2,3,4' -> [1,2,3,4]
@@ -304,25 +304,12 @@ class SubjectTreeDB():
         Returns:
             list: A list containing int elements separeted by commas
         """
-        if str_list == '':
+        if not str_list:
             return []
 
-        final_list = []
-        number = ''
-        for char in str_list:
+        return [int(x) for x in str_list.split(',') if x.isdigit()]
 
-            if char == ',':
-                final_list.append(int(number))
-                number = ''
-                continue
-
-            elif char.isdigit():
-                number += char
-
-        final_list.append(int(number))
-        return final_list
-
-    def travel_tree(self, actual_subject: Subject, nodes=[]) -> list:
+    def travel_tree(self, actual_subject: Subject, nodes=None) -> list:
         """
         Travels the entire tree returning a list of all the nodes
 
@@ -333,6 +320,9 @@ class SubjectTreeDB():
         Returns:
             list: A list of nodes
         """
+        if nodes is None:
+            nodes = []
+
         if actual_subject.year == 0:
             nodes.append(actual_subject)
         for child in actual_subject.children:
@@ -346,11 +336,11 @@ class SubjectTreeDB():
         Returns the SubjectTree represented as a dictionary
 
         {
-            'year0':[
+            'year0': [
                 {
                     id: 1,
                     name: 'Analisis matematico',
-                    children: [2,3,5]
+                    children: [2, 3, 5]
                     ...
                 },
             ]
@@ -378,7 +368,6 @@ class SubjectTreeDB():
             key = 'year_' + str(year)
             year_subject_dict[key] = year_list
             for i, subject in enumerate(year_list):
-
                 if self.tree_type == 'approval':
                     subject_dict = {
                         'id': subject.sql_id,
@@ -408,8 +397,8 @@ class SubjectTreeDB():
         Builds the tree structure using the database data
 
         Args:
-            career (str): must be: sistemas, mecanica, metalurgica, electronica, electrica, industrial or quimica
-            type (str): must be: 'approval' or 'regular'
+            career(str): must be: sistemas, mecanica, metalurgica, electronica, electrica, industrial or quimica
+            type(str): must be: 'approval' or 'regular'
 
         Returns:
             SubjectTree: when the transaction was successfull and the tree was created correctly
@@ -422,7 +411,8 @@ class SubjectTreeDB():
                 is_approved=False, sql_id=ingreso.id, name=ingreso.name, is_enrollable=True, year=0)
 
             tree = ApprovalTree(root=ingreso_subject)
-            ingreso_children_ids = self.parseStrList(ingreso.approval_children)
+            ingreso_children_ids = self.parse_str_list(
+                ingreso.approval_children)
 
             tree = self.recursive_approval_tree_build(
                 sql_ids=ingreso_children_ids, tree=tree, actual_subject=tree.root, added_nodes=[tree.root.sql_id])
@@ -433,7 +423,8 @@ class SubjectTreeDB():
                 is_regular=False, sql_id=ingreso.id, name=ingreso.name, is_enrollable=True, year=0)
 
             tree = RegularTree(root=ingreso_subject)
-            ingreso_children_ids = self.parseStrList(ingreso.regular_children)
+            ingreso_children_ids = self.parse_str_list(
+                ingreso.regular_children)
 
             tree = self.recursive_regular_tree_build(
                 sql_ids=ingreso_children_ids, tree=tree, actual_subject=tree.root, added_nodes=[tree.root.sql_id])
@@ -445,8 +436,8 @@ class SubjectTreeDB():
         Generates an approval tree using recursion an database info.
 
         Args:
-            tree (SubjectTree): Base tree
-            sql_ids (list): Ingreso subject children sql_id's list
+            tree(SubjectTree): Base tree
+            sql_ids(list): Ingreso subject children sql_id's list
             added_nodes (list): The nodes that already exist at the tree
             actual_subject (Subject): The current subject
         """
@@ -466,7 +457,7 @@ class SubjectTreeDB():
                 actual_subject.addChild(child)
                 added_nodes.append(child.sql_id)
 
-            self.recursive_approval_tree_build(tree=tree, sql_ids=self.parseStrList(
+            self.recursive_approval_tree_build(tree=tree, sql_ids=self.parse_str_list(
                 child_subject.approval_children), actual_subject=child, added_nodes=added_nodes)
 
         return tree
@@ -497,7 +488,7 @@ class SubjectTreeDB():
                 actual_subject.addChild(child)
                 added_nodes.append(child.sql_id)
 
-            self.recursive_regular_tree_build(tree=tree, sql_ids=self.parseStrList(
+            self.recursive_regular_tree_build(tree=tree, sql_ids=self.parse_str_list(
                 child_subject.regular_children), actual_subject=child, added_nodes=added_nodes)
 
         return tree

@@ -71,7 +71,9 @@ function getTree(career){
         })
 
         .then(data => {
-            generateTree(data)
+            console.log('APPROVAL_TREE: ', data.approval)
+            console.log('REGULAR_TREE: ', data.regular)
+            generateTree(data.approval)
         })
 
         .catch(error => {

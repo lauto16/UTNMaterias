@@ -1,15 +1,27 @@
-def f(st):
-    ingreso_child_sql_ids = []
-    number = ''
-    for char in st:
-        if char == ',':
-            ingreso_child_sql_ids.append(int(number))
-            number = ''
+from .models import UTNSubject
+from .subject_tree import SubjectTreeDB
+
+
+def from_fathers_to_children():
+    """
+    Using the fathers array from every db subject, sets the children of the fathers
+    """
+    subjects = list(UTNSubject.objects.all())
+    for subject in subjects:
+        if subject.regular_fathers == 'sistemas':
             continue
-        elif char.isdigit():
-            number += char
-    ingreso_child_sql_ids.append(int(number))
-    return ingreso_child_sql_ids
 
+        fathers_array = SubjectTreeDB.parseStrList(subject.regular_fathers)
+        for father in fathers_array:
+            try:
+                father_sql = UTNSubject.objects.get(id=father)
+                if father_sql.regular_children == '':
+                    father_sql.regular_children = str(subject.id)
+                else:
+                    father_sql.regular_children = father_sql.regular_children + \
+                        str(f',{str(subject.id)}')
 
-print(f("1,2,3,4,5,6,7,8,9,101212121,"))
+                father_sql.save()
+            except Exception as e:
+                print(e)
+                continue
