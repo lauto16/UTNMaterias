@@ -15,12 +15,12 @@ function getCookie(name) {
 }
 
 
-function getSubject(subject_id) {
+function getSubject(subject_id, career) {
     /*
     Devuelve informacion del subject con id = subject_id (argumento), consultando a la API
     Uso:
     
-            getSubject(element.id.split('_')[1])
+            getSubject(element.id.split('_')[1], 'sistemas')
             .then(data => {
                 console.log(data)
             })
@@ -29,7 +29,7 @@ function getSubject(subject_id) {
             })
 
     */
-    const query = `${window.location.origin}/subject_api/subjects/${subject_id.toString()}`
+    const query = `${window.location.origin}/subject_api/subjects/${career}/${subject_id.toString()}`
     let requestOptions = {
         method: 'GET',
         headers: {
