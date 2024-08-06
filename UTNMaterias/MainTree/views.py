@@ -1,10 +1,6 @@
-from MainTree.models import UTNSubject
-from MainTree.subject_tree import ApprovalSubject
-from rest_framework.views import APIView
 from django.shortcuts import render
 from MainTree.subject_tree import *
-from django.http import JsonResponse, Http404
-from .subject_tree import SubjectTreeDB
+from django.http import Http404
 
 
 def index(request, career: str):

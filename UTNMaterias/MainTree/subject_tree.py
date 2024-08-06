@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
-from .models import UTNSubject
+from .models import UTNSubjectSistemas
 import json
+
+# modularizar esto y modificar para que funcione con el nuevo approach de un model por cada carrera
 
 
 class Subject(ABC):
@@ -406,7 +408,7 @@ class SubjectTreeDB():
         tree = None
 
         if tree_type == 'approval':
-            ingreso = UTNSubject.objects.get(approval_fathers=career)
+            ingreso = UTNSubjectSistemas.objects.get(approval_fathers=career)
             ingreso_subject = ApprovalSubject(
                 is_approved=False, sql_id=ingreso.id, name=ingreso.name, is_enrollable=True, year=0)
 
@@ -418,7 +420,7 @@ class SubjectTreeDB():
                 sql_ids=ingreso_children_ids, tree=tree, actual_subject=tree.root, added_nodes=[tree.root.sql_id])
 
         elif tree_type == 'regular':
-            ingreso = UTNSubject.objects.get(regular_fathers=career)
+            ingreso = UTNSubjectSistemas.objects.get(regular_fathers=career)
             ingreso_subject = RegularSubject(
                 is_regular=False, sql_id=ingreso.id, name=ingreso.name, is_enrollable=True, year=0)
 
@@ -443,7 +445,7 @@ class SubjectTreeDB():
         """
         for sql_id in sql_ids:
             # ami, aga, etc...
-            child_subject = UTNSubject.objects.get(id=sql_id)
+            child_subject = UTNSubjectSistemas.objects.get(id=sql_id)
             child = ApprovalSubject(
                 is_approved=False, is_enrollable=False, name=child_subject.name, sql_id=child_subject.id, year=child_subject.year)
 
@@ -474,7 +476,7 @@ class SubjectTreeDB():
         """
         for sql_id in sql_ids:
             # ami, aga, etc...
-            child_subject = UTNSubject.objects.get(id=sql_id)
+            child_subject = UTNSubjectSistemas.objects.get(id=sql_id)
             child = RegularSubject(
                 is_regular=False, is_enrollable=False, name=child_subject.name, sql_id=child_subject.id, year=child_subject.year)
 

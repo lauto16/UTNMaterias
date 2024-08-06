@@ -11,7 +11,10 @@ class TreeViewSet(viewsets.ModelViewSet):
 
     Returns:
         Response: An http response
+
     """
+
+    # CAMBIAR ESTO Y SUBJECT_TREE PARA QUE FUNCIONE CON EL PROXIMO APPROACH DE UN MODEL POR CADA CARRERA
 
     permission_classes = [permissions.AllowAny]
     http_method_names = ['get']

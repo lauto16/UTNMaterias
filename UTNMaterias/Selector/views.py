@@ -1,5 +1,4 @@
 from django.shortcuts import render
-from MainTree.views import index
 from django.http import JsonResponse
 import json
 

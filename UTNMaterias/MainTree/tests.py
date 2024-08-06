@@ -1,11 +1,11 @@
-from .models import UTNSubject
+"""from .models import UTNSubject
 from .subject_tree import SubjectTreeDB
 
 
 def from_fathers_to_children():
-    """
-    Using the fathers array from every db subject, sets the children of the fathers
-    """
+    
+    #Using the fathers array from every db subject, sets the children of the fathers
+    
     subjects = list(UTNSubject.objects.all())
     for subject in subjects:
         if subject.regular_fathers == 'sistemas':
@@ -25,3 +25,4 @@ def from_fathers_to_children():
             except Exception as e:
                 print(e)
                 continue
+"""

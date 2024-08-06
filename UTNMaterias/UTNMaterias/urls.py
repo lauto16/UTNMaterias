@@ -5,6 +5,7 @@ from Selector.views import *
 from SubjectAPI.urls import *
 from TreeAPI.urls import *
 
+# modificar el url de la api de subject para pedir la carrera tambien
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', selector_view, name='selector'),
