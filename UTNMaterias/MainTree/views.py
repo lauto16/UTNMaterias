@@ -71,6 +71,7 @@ def index(request, career: str):
         data = json.loads(request.body)
         action = data['action']
 
+    # descomentar solo para agregar childrens a fathers en a bd
     # from_fathers_to_children(career)
 
     return render(request, 'index.html', {'career': career})
