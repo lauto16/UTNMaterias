@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from .models import UTNSubjectSistemas
+from .models import *
 import json
-
+from SubjectAPI.api import SubjectViewSet
 # modularizar esto y modificar para que funcione con el nuevo approach de un model por cada carrera
 
 
@@ -292,6 +292,7 @@ class SubjectTreeDB():
     def __init__(self, career: str, tree_type: str) -> None:
         self.career = career
         self.tree_type = tree_type
+        self.model = SubjectViewSet.get_model_for_career(career=self.career)
         self.tree = self.create(tree_type=self.tree_type, career=self.career)
 
     @staticmethod
@@ -408,7 +409,8 @@ class SubjectTreeDB():
         tree = None
 
         if tree_type == 'approval':
-            ingreso = UTNSubjectSistemas.objects.get(approval_fathers=career)
+
+            ingreso = self.model.objects.get(approval_fathers=career)
             ingreso_subject = ApprovalSubject(
                 is_approved=False, sql_id=ingreso.id, name=ingreso.name, is_enrollable=True, year=0)
 
@@ -420,7 +422,7 @@ class SubjectTreeDB():
                 sql_ids=ingreso_children_ids, tree=tree, actual_subject=tree.root, added_nodes=[tree.root.sql_id])
 
         elif tree_type == 'regular':
-            ingreso = UTNSubjectSistemas.objects.get(regular_fathers=career)
+            ingreso = self.model.objects.get(regular_fathers=career)
             ingreso_subject = RegularSubject(
                 is_regular=False, sql_id=ingreso.id, name=ingreso.name, is_enrollable=True, year=0)
 
@@ -445,7 +447,7 @@ class SubjectTreeDB():
         """
         for sql_id in sql_ids:
             # ami, aga, etc...
-            child_subject = UTNSubjectSistemas.objects.get(id=sql_id)
+            child_subject = self.model.objects.get(id=sql_id)
             child = ApprovalSubject(
                 is_approved=False, is_enrollable=False, name=child_subject.name, sql_id=child_subject.id, year=child_subject.year)
 
@@ -476,7 +478,7 @@ class SubjectTreeDB():
         """
         for sql_id in sql_ids:
             # ami, aga, etc...
-            child_subject = UTNSubjectSistemas.objects.get(id=sql_id)
+            child_subject = self.model.objects.get(id=sql_id)
             child = RegularSubject(
                 is_regular=False, is_enrollable=False, name=child_subject.name, sql_id=child_subject.id, year=child_subject.year)
 

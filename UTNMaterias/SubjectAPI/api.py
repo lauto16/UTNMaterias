@@ -1,10 +1,7 @@
 from MainTree.models import *
 from rest_framework import viewsets, permissions
 from .serializers import SubjectSerializer
-from rest_framework.decorators import action
-from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
-from django.shortcuts import render
 
 
 class SubjectViewSet(viewsets.ModelViewSet):
@@ -18,6 +15,12 @@ class SubjectViewSet(viewsets.ModelViewSet):
     http_method_names = ['get']
 
     def get_queryset(self):
+        """
+        Returns the subject whose id = subject_id (url argument)
+
+        Returns:
+            queryset: Contains all the matches 
+        """
         career = self.kwargs.get('career')
         subject_id = self.kwargs.get('id')
 
@@ -29,7 +32,17 @@ class SubjectViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    def get_model_for_career(self, career):
+    @staticmethod
+    def get_model_for_career(career: str):
+        """
+        Returns the UTNSubject model class of a given career
+
+        Args:
+            career (str): An UTN career, must be: civil, electrica, electronica, industrial, mecanica, metalurgica, quimica or sistemas
+
+        Returns:
+            UTNSubject: UTNSubject model class
+        """
         career_model_map = {
             'civil': UTNSubjectCivil,
             'electrica': UTNSubjectElectrica,
