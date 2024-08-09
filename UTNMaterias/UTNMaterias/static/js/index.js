@@ -77,7 +77,7 @@ function getTree(career){
         .then(data => {
             console.log('APPROVAL_TREE: ', data.approval)
             console.log('REGULAR_TREE: ', data.regular)
-            generateTree(data.approval, data.regular)
+            generateTree(data.approval, data.regular, career)
         })
 
         .catch(error => {
@@ -339,7 +339,7 @@ function setEventListeners(classname1, classname2, approval_tree, regular_tree){
 }
 
 
-function generateTree(approval_tree, regular_tree) {
+function generateTree(approval_tree, regular_tree, career) {
     // genera el grid de subjects y luego lo rellena con los subjects del arbol de aprobacion
 
     const container = document.getElementById('grid-container')
@@ -397,4 +397,24 @@ function generateTree(approval_tree, regular_tree) {
     changeSubjectStyle('subject', '#eaeaf7', 0, '')
     // sets onClick event listeners to all inUse elements
     setEventListeners('subject', 'inUse', approval_tree, regular_tree)
+
+    // special case, it has 6 years instead of 5
+    if (career === 'electronica'){
+        let elements = Array.from(document.querySelectorAll('#grid-container > *:not(.inUse)'))
+        console.log(elements)
+        elements = elements.slice(21,24)
+        for (let i = 0; i < elements.length; i++) {
+            let element = elements[i]
+            element.id = `subject_${37 + i}`
+            element.setAttribute('data-state', 'null')
+            element.className = element.className + ' inUse'
+            element.style.backgroundColor = '#b5dcf7'
+            element.style.border = '1px solid #577d97'
+            element.textContent = approval_tree['year_6'][i].name
+            element.addEventListener('click', function(e){
+                changeState(element, approval_tree, regular_tree)
+            })
+        }
+    }
+
 }
