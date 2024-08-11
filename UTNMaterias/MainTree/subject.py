@@ -54,10 +54,11 @@ class ApprovalSubject(Subject):
         self.is_approved: bool -> True if the user completely finished the subject
     """
 
-    def __init__(self, is_approved: bool, sql_id: int, name: str, is_enrollable: bool, year: int) -> None:
+    def __init__(self, is_approved: bool, sql_id: int, name: str, is_enrollable: bool, year: int, all_approved: bool) -> None:
         super().__init__(sql_id=sql_id, name=name, is_enrollable=is_enrollable)
         self.is_approved = is_approved
         self.year = year
+        self.all_approved = all_approved
 
     def __str__(self) -> str:
         return str(self.as_dict())

@@ -244,6 +244,15 @@ function updateTrees(approval_tree, regular_tree){
         }
 
         if (approval_subject.is_approved){
+            if (approval_subject.all_approved) {
+                if (isAllApproved(approval_subject, approval_tree)){
+                    continue
+                }
+                else{
+                    approval_subject.is_approved = false
+                    regular_subject.is_regular = false
+                }
+            }
             if (isEnrollable(approval_subject, regular_subject, approval_tree, regular_tree) && isApprovable(approval_subject, regular_subject, approval_tree, regular_tree)) {
                 continue
             }
@@ -284,6 +293,27 @@ function setAsRegular(approval_subject, regular_subject){
 }
 
 
+function isAllApproved(approval_subject, approval_tree){
+    const all_subjects = Object.values(approval_tree).flat()
+    let only_subjects_before = []
+    for (let i = 0; i < all_subjects.length; i++) {
+        const subject = all_subjects[i]
+        if (subject.id < approval_subject.id){
+            only_subjects_before.push(subject)
+        }
+        
+    }
+    for (let i = 0; i < only_subjects_before.length; i++) {
+        const subject = only_subjects_before[i];
+        if (!(subject.is_approved)){
+            return false
+        }
+        
+    }
+    return true
+}
+
+
 function changeState(element, approval_tree, regular_tree){
     // cambia el estado de is_approved e is_regular en ambos arboles y luego llama a updateTrees para aplicar los cambios
     let element_id = element.id.split('_')[1]
@@ -299,8 +329,20 @@ function changeState(element, approval_tree, regular_tree){
                 console.error(`${approval_subject.name} it's not enrollable yet`)
                 return
             }
-        
-            setAsApproved(approval_subject, regular_subject)
+            
+            if (approval_subject.all_approved){
+                if (isAllApproved(approval_subject, approval_tree)){
+                    setAsApproved(approval_subject, regular_subject)
+                }
+                else{
+                    setAsRegular(approval_subject, regular_subject)
+                }
+            }
+            
+            else{
+                setAsApproved(approval_subject, regular_subject)
+            }
+
         }
         else{
             if(!(approval_subject.is_enrollable && regular_subject.is_enrollable)){
@@ -312,7 +354,18 @@ function changeState(element, approval_tree, regular_tree){
         }
     }
     else if(state === 'regular'){
-        setAsApproved(approval_subject, regular_subject)
+        if (approval_subject.all_approved){
+            if (isAllApproved(approval_subject, approval_tree)){
+                setAsApproved(approval_subject, regular_subject)
+            }
+            else{
+                setAsNull(approval_subject, regular_subject)
+            }
+        }
+        
+        else{
+            setAsApproved(approval_subject, regular_subject)
+        }
     }
     else if(state === 'approved'){
         setAsNull(approval_subject, regular_subject)

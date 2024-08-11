@@ -52,6 +52,51 @@ def from_fathers_to_children(career: str):
                 continue
 
 
+def add_fathers_final(career: str, final_id: int):
+    model = SubjectViewSet.get_model_for_career(career)
+    final = model.objects.get(id=final_id)
+    subjects = list(model.objects.all())
+
+    final_lista_fathers = SubjectTreeDB.parse_str_list(final.approval_fathers)
+
+    for subject in subjects:
+        if not (subject.id in final_lista_fathers) and subject.id != final_id:
+            final.approval_fathers = final.approval_fathers + \
+                str(f',{subject.id}')
+    final.save()
+
+
+def add_fathers_mid(career: str, mid_id: int):
+    model = SubjectViewSet.get_model_for_career(career)
+    mid = model.objects.get(id=mid_id)
+    subjects = list(model.objects.all())
+
+    mid_lista_fathers = SubjectTreeDB.parse_str_list(mid.approval_fathers)
+
+    for subject in subjects:
+        if not (subject.id in mid_lista_fathers) and subject.id != mid_id and subject.id < mid_id:
+            mid.approval_fathers = mid.approval_fathers + \
+                str(f',{subject.id}')
+    mid.save()
+
+
+def hijos(career: str, mid_id: int):
+    model = SubjectViewSet.get_model_for_career(career)
+    mid = model.objects.get(id=mid_id)
+    subjects = [model.objects.get(
+        id=id) for id in SubjectTreeDB.parse_str_list(mid.approval_fathers)]
+    for subject in subjects:
+        lista_hijos = SubjectTreeDB.parse_str_list(subject.approval_children)
+        if not (mid_id in lista_hijos) and subject.id != mid_id:
+            if lista_hijos:
+                subject.approval_children = subject.approval_children + \
+                    str(f',{mid_id}')
+            else:
+                subject.approval_children = mid_id
+
+        subject.save()
+
+
 def index(request, career: str):
     careers = [
         'civil',
@@ -73,5 +118,14 @@ def index(request, career: str):
 
     # descomentar solo para agregar childrens a fathers en a bd
     # from_fathers_to_children(career)
+
+    # agregar como padres de aprobacion a todos los anteriores al que se le pasa (titulo final)
+    # add_fathers_final(career, 38)
+
+    # agregar como padres de aprobacion a todos los anteriores al que se le pasa (titulo intermedio)
+    # add_fathers_mid(career, 25)
+
+    # agregar hijos de lo anterior
+    # hijos(career, 38)
 
     return render(request, 'index.html', {'career': career})

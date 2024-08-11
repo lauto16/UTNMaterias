@@ -223,7 +223,8 @@ class SubjectTreeDB():
                         'children': [x.sql_id for x in subject.children],
                         'fathers': [x.sql_id for x in subject.fathers],
                         'is_approved': subject.is_approved,
-                        'is_enrollable': subject.is_enrollable
+                        'is_enrollable': subject.is_enrollable,
+                        'all_approved': subject.all_approved
                     }
                     year_list[i] = subject_dict
 
@@ -257,7 +258,7 @@ class SubjectTreeDB():
 
             ingreso = self.model.objects.get(approval_fathers=career)
             ingreso_subject = ApprovalSubject(
-                is_approved=False, sql_id=ingreso.id, name=ingreso.name, is_enrollable=True, year=0)
+                is_approved=False, sql_id=ingreso.id, name=ingreso.name, is_enrollable=True, year=0, all_approved=ingreso.all_approved)
 
             tree = ApprovalTree(root=ingreso_subject)
             ingreso_children_ids = self.parse_str_list(
@@ -294,7 +295,7 @@ class SubjectTreeDB():
             # ami, aga, etc...
             child_subject = self.model.objects.get(id=sql_id)
             child = ApprovalSubject(
-                is_approved=False, is_enrollable=False, name=child_subject.name, sql_id=child_subject.id, year=child_subject.year)
+                is_approved=False, is_enrollable=False, name=child_subject.name, sql_id=child_subject.id, year=child_subject.year, all_approved=child_subject.all_approved)
 
             if child.sql_id in added_nodes:
                 found_subject = tree.search(
