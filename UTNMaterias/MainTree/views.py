@@ -6,7 +6,7 @@ import json
 from .models import *
 from .subject_tree import SubjectTreeDB
 from SubjectAPI.api import SubjectViewSet
-
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 def from_fathers_to_children(career: str):
 
@@ -96,7 +96,7 @@ def hijos(career: str, mid_id: int):
 
         subject.save()
 
-
+@ensure_csrf_cookie
 def index(request, career: str):
     careers = [
         'civil',
