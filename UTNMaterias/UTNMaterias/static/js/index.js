@@ -226,7 +226,7 @@ function changeHtmlStates(approval_tree, regular_tree){
 }
 
 
-function updateTrees(approval_tree, regular_tree){
+function updateTrees(approval_tree, regular_tree, career){
     // actualiza el estado de los arboles segun lo que se cambio en changeStates chequeando antes si es posible
     let all_approval_subjects = Object.values(approval_tree).flat()
 
@@ -245,7 +245,7 @@ function updateTrees(approval_tree, regular_tree){
 
         if (approval_subject.is_approved){
             if (approval_subject.all_approved) {
-                if (isAllApproved(approval_subject, approval_tree)){
+                if (isAllApproved(approval_subject, approval_tree, career)){
                     continue
                 }
                 else{
@@ -293,16 +293,34 @@ function setAsRegular(approval_subject, regular_subject){
 }
 
 
-function isAllApproved(approval_subject, approval_tree){
+function isAllApproved(approval_subject, approval_tree, career){
     const all_subjects = Object.values(approval_tree).flat()
+
     let only_subjects_before = []
+    let only_subjects_after = []
+
     for (let i = 0; i < all_subjects.length; i++) {
         const subject = all_subjects[i]
         if (subject.id < approval_subject.id){
             only_subjects_before.push(subject)
         }
+        else if (subject.id > approval_subject.id){
+            // special case, sistemas has 2 'final projects'
+            if (career !== 'sistemas'){
+                only_subjects_after.push(subject)
+            }
+        }
         
     }
+
+    for (let i = 0; i < only_subjects_after.length; i++) {
+        const subject = only_subjects_after[i];
+        if (!(subject.is_approved)){
+            return false
+        }
+        
+    }
+
     for (let i = 0; i < only_subjects_before.length; i++) {
         const subject = only_subjects_before[i];
         if (!(subject.is_approved)){
@@ -314,7 +332,7 @@ function isAllApproved(approval_subject, approval_tree){
 }
 
 
-function changeState(element, approval_tree, regular_tree){
+function changeState(element, approval_tree, regular_tree, career){
     // cambia el estado de is_approved e is_regular en ambos arboles y luego llama a updateTrees para aplicar los cambios
     let element_id = element.id.split('_')[1]
     
@@ -331,7 +349,7 @@ function changeState(element, approval_tree, regular_tree){
             }
             
             if (approval_subject.all_approved){
-                if (isAllApproved(approval_subject, approval_tree)){
+                if (isAllApproved(approval_subject, approval_tree, career)){
                     setAsApproved(approval_subject, regular_subject)
                 }
                 else{
@@ -355,7 +373,7 @@ function changeState(element, approval_tree, regular_tree){
     }
     else if(state === 'regular'){
         if (approval_subject.all_approved){
-            if (isAllApproved(approval_subject, approval_tree)){
+            if (isAllApproved(approval_subject, approval_tree, career)){
                 setAsApproved(approval_subject, regular_subject)
             }
             else{
@@ -370,11 +388,11 @@ function changeState(element, approval_tree, regular_tree){
     else if(state === 'approved'){
         setAsNull(approval_subject, regular_subject)
     }
-    updateTrees(approval_tree, regular_tree)
+    updateTrees(approval_tree, regular_tree, career)
 }
 
 
-function setEventListeners(classname1, classname2, approval_tree, regular_tree){
+function setEventListeners(classname1, classname2, approval_tree, regular_tree, career){
     // setea los event listeners de todos los divs (slots)
     elements = document.querySelectorAll(`.${classname1}`)
     let in_use = []
@@ -386,7 +404,7 @@ function setEventListeners(classname1, classname2, approval_tree, regular_tree){
     }
     in_use.forEach(element => {
         element.addEventListener('click', function(e){
-            changeState(element, approval_tree, regular_tree)
+            changeState(element, approval_tree, regular_tree, career)
         })
     })
 }
@@ -449,7 +467,7 @@ function generateTree(approval_tree, regular_tree, career) {
     // sets the background color, border and id of the unused slots so that they are invisible
     changeSubjectStyle('subject', '#eaeaf7', 0, '')
     // sets onClick event listeners to all inUse elements
-    setEventListeners('subject', 'inUse', approval_tree, regular_tree)
+    setEventListeners('subject', 'inUse', approval_tree, regular_tree, career)
 
     // special case, it has 6 years instead of 5
     if (career === 'electronica'){
@@ -465,7 +483,7 @@ function generateTree(approval_tree, regular_tree, career) {
             element.style.border = '1px solid #577d97'
             element.textContent = approval_tree['year_6'][i].name
             element.addEventListener('click', function(e){
-                changeState(element, approval_tree, regular_tree)
+                changeState(element, approval_tree, regular_tree, career)
             })
         }
     }
