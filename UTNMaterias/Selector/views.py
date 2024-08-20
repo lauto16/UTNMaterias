@@ -9,5 +9,4 @@ def selector_view(request):
         data = json.loads(request.body)
         career = data['career']
         return JsonResponse({'career': career})
-    # test
     return render(request, 'selector.html')
