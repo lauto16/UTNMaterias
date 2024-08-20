@@ -4,6 +4,7 @@ from MainTree.views import *
 from Selector.views import *
 from SubjectAPI.urls import *
 from TreeAPI.urls import *
+from Selector.views import *
 
 # modificar el url de la api de subject para pedir la carrera tambien
 urlpatterns = [
@@ -11,5 +12,6 @@ urlpatterns = [
     path('', selector_view, name='selector'),
     path('index/<str:career>', index, name='index'),
     path('subject_api/', include('SubjectAPI.urls')),
-    path('tree_api/', include('TreeAPI.urls'))
+    path('tree_api/', include('TreeAPI.urls')),
+    path('login/', login_view, name='login')
 ]
