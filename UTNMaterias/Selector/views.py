@@ -5,7 +5,6 @@ from django.http import JsonResponse
 import json
 
 
-@login_required
 @ensure_csrf_cookie
 def selector_view(request):
     if request.method == 'POST':
