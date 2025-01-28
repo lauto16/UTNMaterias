@@ -22,7 +22,6 @@ function getSubject(subject_id, career) {
     
             getSubject(element.id.split('_')[1], 'sistemas')
             .then(data => {
-                console.log(data)
             })
             .catch(error => {
                 console.error('Error fetching subject:', error)
@@ -75,8 +74,6 @@ function getTree(career){
         })
 
         .then(data => {
-            console.log('APPROVAL_TREE: ', data.approval)
-            console.log('REGULAR_TREE: ', data.regular)
             generateTree(data.approval, data.regular, career)
         })
 
@@ -472,7 +469,6 @@ function generateTree(approval_tree, regular_tree, career) {
     // special case, it has 6 years instead of 5
     if (career === 'electronica'){
         let elements = Array.from(document.querySelectorAll('#grid-container > *:not(.inUse)'))
-        console.log(elements)
         elements = elements.slice(21,24)
         for (let i = 0; i < elements.length; i++) {
             let element = elements[i]
